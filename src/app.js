@@ -13,8 +13,8 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(logger('tiny'));
 
-app.post("/c",  require("./controllers/ShortRoutes").shortRoute)
-app.get("/:ext", require("./controllers/ShortRoutes").redirectToUrl)
+app.post("/c",  require("./controllers/ShortRoutesController").shortRoute)
+app.get("/:ext", require("./controllers/ShortRoutesController").redirectToUrl)
 
 // handler routers not found
 app.use((req, res, next) => {
