@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const shortRoute = async (req, res) => {
     let url = validateUrl(req.body.url);
-
+    
     if (!url) {
         return res.
             status(400).
