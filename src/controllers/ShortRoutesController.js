@@ -17,7 +17,8 @@ const shortRoute = async (req, res) => {
             });
     }
 
-    await shortener.getUrlShorted(url, (err, result) => {
+    await shortener.getUrlShorted(url, req.userUuid, (err, result) => {
+        console.log("reqUserUuid: ", req.userUuid)
         if (err) {
             return res.
                 status(400).json({

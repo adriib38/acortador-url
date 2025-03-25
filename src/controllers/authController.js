@@ -1,4 +1,4 @@
-const { User } = require("../Models/AuthModels.js")
+const User = require("../Models/AuthModels.js")
 const jwt = require("jsonwebtoken")
 const { v4: uuidv4 } = require("uuid");
 
@@ -7,16 +7,17 @@ require("dotenv").config();
 //Register new users
 const signup = async (req, res) => {
     let user = (req.body);
-
+    let _user;
     try { 
-        const _user = await User.create({
+        _user = await User.create({
             uuid: uuidv4(),
             username: user.username,
             password: user.password,
         });
     
     } catch(e) {
-        if (e.parent.code === "ER_DUP_ENTRY") {
+        console.log(e)
+        if (e.parent?.code === "ER_DUP_ENTRY") {
             return res
                 .status(409)
                 .json({ error: "Username already exists" });
@@ -27,7 +28,7 @@ const signup = async (req, res) => {
             .json({ error: "Unknown error" });
     }
 
-    let token = jwt.sign({ id: user.uuid }, process.env.JWT_SECRET, {
+    let token = jwt.sign({ id: _user.uuid }, process.env.JWT_SECRET, {
         expiresIn: "1h",
     });
 

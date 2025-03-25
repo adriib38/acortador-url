@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../services/db.js');
+const User = require("./AuthModels.js");
 
 const Url = sequelize.define('Url', {
     uuid: { 
@@ -13,11 +14,16 @@ const Url = sequelize.define('Url', {
         allowNull: false,
         unique: true,
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
+    user: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'uuid',
+        },
     },
 });
+
 
 const AccessUrls = sequelize.define('accessUrls', {
     uuid: { 
@@ -30,8 +36,8 @@ const AccessUrls = sequelize.define('accessUrls', {
         allowNull: false,
         references: {
             model: Url,
-            key: 'short'
-        }
+            key: 'short',
+        },
     },
     navigatorLanguage: DataTypes.STRING,
     navigatorAgent: DataTypes.STRING,
@@ -39,10 +45,14 @@ const AccessUrls = sequelize.define('accessUrls', {
     createdAt: DataTypes.DATE,
 });
 
+User.hasMany(Url, { foreignKey: 'user', sourceKey: 'uuid' });
+Url.belongsTo(User, { foreignKey: 'user', targetKey: 'uuid' });
+
 Url.hasMany(AccessUrls, { foreignKey: 'shortUrl', sourceKey: 'short' });
 AccessUrls.belongsTo(Url, { foreignKey: 'shortUrl', targetKey: 'short' });
 
 module.exports = {
     Url,
     AccessUrls,
+    User,
 };
