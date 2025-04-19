@@ -17,13 +17,13 @@ const signup = async (req, res) => {
   }
 
   try {
-    let _user = await User.create({
+    let userFound = await User.create({
       uuid: uuidv4(),
       username: user.username,
       password: user.password,
     });
 
-    let token = jwt.sign({ id: _user.uuid }, process.env.JWT_SECRET, {
+    let token = jwt.sign({ id: userFound.uuid }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
@@ -40,7 +40,6 @@ const signup = async (req, res) => {
         user: user,
       });
   } catch (e) {
-    console.log(e);
     if (e.parent?.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ error: "Username already exists" });
     }
@@ -60,30 +59,29 @@ const signin = async (req, res) => {
   //TODO: Validate username and password (regex)
 
   try {
-    let _user = await User.findOne({
+    let userFound = await User.findOne({
       where: {
         username: user.username,
       },
     });
 
-    if (_user === null) {
+    if (userFound === null) {
       return res.status(404).json({ message: "User not found" });
     }
 
     let validPassword = await validatePassword(
       user.password,
-      _user.dataValues.password
+      userFound.dataValues.password
     );
+
     if (!validPassword) {
       return res.status(401).json({ message: "Invalid password" });
     } else {
-      let token = jwt.sign(
-        { id: _user.dataValues.uuid },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1h",
-        }
-      );
+        let token = jwt.sign({ id: userFound.dataValues.uuid }, process.env.JWT_SECRET,
+            {
+                expiresIn: "1h",
+            }
+        );
 
       return res
         .status(201)
@@ -95,30 +93,28 @@ const signin = async (req, res) => {
         })
         .json({
           message: "User logged in",
-          user: _user.username,
+          user: userFound.username,
         });
     }
   } catch (e) {
-    console.log(e);
-    return res.status(500).json({ message: "error" });
+    return res.status(500).json({ message: "Unknown error" });
   }
 };
 
-
 const signout = async (req, res) => {
-    res.cookie("access_token", "none", {
-      expires: new Date(Date.now() + 5 * 1000),
-      httpOnly: true,
-    });
-    res.status(200).json({ message: "User logged out successfully" });
-  };
+  res.cookie("access_token", "none", {
+    expires: new Date(Date.now() + 5 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ message: "User logged out successfully" });
+};
 
 const validatePassword = async (password, hashedPassword) => {
   return bcrypt.compare(password, hashedPassword);
 };
 
 module.exports = {
-    signup,
-    signin,
-    signout,
+  signup,
+  signin,
+  signout,
 };
