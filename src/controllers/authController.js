@@ -104,11 +104,21 @@ const signin = async (req, res) => {
   }
 };
 
+
+const signout = async (req, res) => {
+    res.cookie("access_token", "none", {
+      expires: new Date(Date.now() + 5 * 1000),
+      httpOnly: true,
+    });
+    res.status(200).json({ message: "User logged out successfully" });
+  };
+
 const validatePassword = async (password, hashedPassword) => {
   return bcrypt.compare(password, hashedPassword);
 };
 
 module.exports = {
-  signup,
-  signin,
+    signup,
+    signin,
+    signout,
 };
