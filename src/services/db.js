@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
-const config = require("../config.json")[process.env.ENV];
+const config = require("../../config/config.json")[process.env.ENVIRONMENT || "development"];
 
 const sequelize = new Sequelize(
     config.database,
