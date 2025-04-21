@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
-const config = require("../config.json")[process.env.ENV];
+const config = require("../../config/config.json")[process.env.ENVIRONMENT || "development"];
 
 const sequelize = new Sequelize(
     config.database,
@@ -12,8 +12,6 @@ const sequelize = new Sequelize(
         port: config.port || 3306,
     }
 );
-
-console.log(config)
 
 sequelize.authenticate()
     .then(() =>  console.log("Connection has been established successfully."))

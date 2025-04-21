@@ -1,0 +1,34 @@
+###
+# Login
+POST http://localhost:3031/auth/signin
+Content-Type: application/json
+
+{
+  "username": "aa",
+  "password": "bb"
+}
+
+###
+# Create user account and recive token (signin)
+POST http://localhost:3031/auth/signup
+Content-Type: application/json
+
+{
+  "username": "aa",
+  "password": "bb"
+}
+
+###
+# Close session
+GET http://localhost:3031/auth/signout
+
+###
+# Short url
+POST http://localhost:3031/c
+Content-Type: application/json
+Cookie: access_token=<>
+
+{
+  "url": "https://link.com"
+}
+
