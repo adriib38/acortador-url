@@ -25,11 +25,16 @@ src/
 ├── utils/               # Utilidades como validación de URLs
 
 config/
-├──config.js     # DB config por entorno
+├──config.json     # DB config por entorno
+
+test/
+├── createUrl.js
+├── createUser.js
+├── requests.http
 
 ```
 
-## Configuración
+## Getting Started
 
 1. Clona el repositorio:
    ```bash
@@ -64,7 +69,7 @@ config/
   }
   ```
 
-- **Redirigir a una URL original:** Accede a `/shortcode`, donde `shortcode` es el código generado para la URL corta.
+- **Redirigir a una URL original:** Accede a `/:ext`, donde `shortcode` es el código generado para la URL corta.
 
 ## Tecnologías utilizadas
 
@@ -72,11 +77,9 @@ config/
 - **Express.js**
 - **Sequelize** (ORM para bases de datos SQL)
 - **JWT** (JSON Web Tokens para autenticación)
+- **JavaScript**
 
 ## Contribuciones
 
 ¡Las contribuciones son bienvenidas! Por favor, abre un issue o un pull request para sugerir mejoras o reportar problemas.
 
-## Licencia
-
-Este proyecto está bajo la licencia MIT.
