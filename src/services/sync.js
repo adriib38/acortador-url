@@ -1,7 +1,7 @@
 const sequelize = require("./db");
 const auth = require("../Models/AuthModels")
 const models = require("../Models/models")
-
+const User = require("../Models/AuthModels")
 
 async function syncDatabase() {
     try {
