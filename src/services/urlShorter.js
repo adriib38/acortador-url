@@ -2,11 +2,11 @@ require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const { Url } = require("../Models/models");
 
-const URL_BASE_SHORT = process.env.URL_BASE_SHORT || "http://:3030";
+const URL_BASE_SHORT = process.env.URL_BASE_SHORT;
 
 
 class Shortener {
-  async getUrlShorted(url, cb) {
+  async getUrlShorted(url, user, cb) {
     
     if (url === "") {
       return cb("Invalid URL", null);
@@ -21,7 +21,7 @@ class Shortener {
       uuid: _uuid,
       long: url,
       short: shortUrl,
-      createdAt: new Date(),
+      user: user
     });
 
     return cb(null, shortUrl);

@@ -1,11 +1,17 @@
 const sequelize = require("./db");
+const auth = require("../Models/AuthModels")
+const models = require("../Models/models")
 
-const { Url, AccessUrls } = require("../Models/models.js");
 
 async function syncDatabase() {
-    await sequelize.sync({ force: true });
-    console.log('Database sincronized succesfull');
-}  
+    try {
+        await sequelize.sync({ force: true });
+        console.log('Database synchronized successfully');
+    } catch (error) {
+        console.error('Error synchronizing the database:', error);
+    }
+} 
+
 
 
 syncDatabase();
