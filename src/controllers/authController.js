@@ -23,13 +23,17 @@ const signup = async (req, res) => {
       password: user.password,
     });
 
-    let token = jwt.sign({ id: userFound.uuid }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    let accessToken = jwt.sign({ id: userFound.uuid }, process.env.JWT_ACCESS_SECRET, {
+      expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
+    });
+
+    let refreshToken = jwt.sign({ id: userFound.uuid }, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
     });
 
     return res
       .status(201)
-      .cookie("access_token", token, {
+      .cookie("refresh_token", refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
@@ -38,6 +42,7 @@ const signup = async (req, res) => {
       .json({
         message: "User created",
         user: user,
+        access_token: accessToken,
       });
   } catch (e) {
     if (e.parent?.code === "ER_DUP_ENTRY") {
@@ -77,15 +82,18 @@ const signin = async (req, res) => {
     if (!validPassword) {
       return res.status(401).json({ message: "Invalid password" });
     } else {
-        let token = jwt.sign({ id: userFound.dataValues.uuid }, process.env.JWT_SECRET,
-            {
-                expiresIn: "1h",
-            }
-        );
+
+        let accessToken = jwt.sign({ id: userFound.dataValues.uuid }, process.env.JWT_ACCESS_SECRET, {
+          expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
+        });
+    
+        let refreshToken = jwt.sign({ id: userFound.dataValues.uuid }, process.env.JWT_REFRESH_SECRET, {
+          expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
+        });
 
       return res
-        .status(201)
-        .cookie("access_token", token, {
+        .status(200)
+        .cookie("refresh_token", refreshToken, {
           httpOnly: true,
           secure: true,
           sameSite: "strict",
@@ -94,6 +102,7 @@ const signin = async (req, res) => {
         .json({
           message: "User logged in",
           user: userFound.username,
+          access_token: accessToken,
         });
     }
   } catch (e) {
@@ -109,6 +118,32 @@ const signout = async (req, res) => {
   res.status(200).json({ message: "User logged out successfully" });
 };
 
+const refreshToken = async (req, res) => {
+  let refreshToken = req.cookies.refresh_token;
+  if (!refreshToken) {
+    return res.status(403).json({ message: "No token provided" });
+  }
+
+  const isValid = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+  if (isValid) {
+    req.userUuid = isValid.id; //Get user uuid from token
+    let newAccessToken = jwt.sign({ id: req.userUuid }, process.env.JWT_ACCESS_SECRET, {
+      expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
+    });
+
+    return res
+      .status(201)
+      .json({
+        message: "New access token created",
+        access_token: newAccessToken,
+      });
+  } else {
+    //If token invalid return 403, NO 401 because with 401 the frontend send req tu refresh token, and that would cause an infinite loop
+    return res.status(403).json({ message: "Invalid token" });
+  }
+};
+
 const validatePassword = async (password, hashedPassword) => {
   return bcrypt.compare(password, hashedPassword);
 };
@@ -117,4 +152,5 @@ module.exports = {
   signup,
   signin,
   signout,
+  refreshToken
 };
