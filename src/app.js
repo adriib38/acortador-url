@@ -8,12 +8,11 @@ const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
 
 app.use(cookieParser());
 const limiter = rateLimit({
-	windowMs: 60 * 1000, //1minute
-	limit: 5, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	windowMs: 60 * 24 * 1000, // 60 minutes
+	limit: 100, //Limit request by IP
+	standardHeaders: true,
 	legacyHeaders: false,
   message: 'Too many requests, please try again later.',
-
 })
 
 app.use(limiter); 
