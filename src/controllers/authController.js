@@ -2,6 +2,7 @@ const User = require("../Models/AuthModels.js");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
+const { Url } = require("../Models/models.js");
 
 require("dotenv").config();
 
@@ -23,13 +24,21 @@ const signup = async (req, res) => {
       password: user.password,
     });
 
-    let accessToken = jwt.sign({ id: userFound.uuid }, process.env.JWT_ACCESS_SECRET, {
-      expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
-    });
+    let accessToken = jwt.sign(
+      { id: userFound.uuid },
+      process.env.JWT_ACCESS_SECRET,
+      {
+        expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
+      }
+    );
 
-    let refreshToken = jwt.sign({ id: userFound.uuid }, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
-    });
+    let refreshToken = jwt.sign(
+      { id: userFound.uuid },
+      process.env.JWT_REFRESH_SECRET,
+      {
+        expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
+      }
+    );
 
     return res
       .status(201)
@@ -82,14 +91,21 @@ const signin = async (req, res) => {
     if (!validPassword) {
       return res.status(401).json({ message: "Invalid password" });
     } else {
-
-        let accessToken = jwt.sign({ id: userFound.dataValues.uuid }, process.env.JWT_ACCESS_SECRET, {
+      let accessToken = jwt.sign(
+        { id: userFound.dataValues.uuid },
+        process.env.JWT_ACCESS_SECRET,
+        {
           expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
-        });
-    
-        let refreshToken = jwt.sign({ id: userFound.dataValues.uuid }, process.env.JWT_REFRESH_SECRET, {
+        }
+      );
+
+      let refreshToken = jwt.sign(
+        { id: userFound.dataValues.uuid },
+        process.env.JWT_REFRESH_SECRET,
+        {
           expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
-        });
+        }
+      );
 
       return res
         .status(200)
@@ -128,19 +144,55 @@ const refreshToken = async (req, res) => {
 
   if (isValid) {
     req.userUuid = isValid.id; //Get user uuid from token
-    let newAccessToken = jwt.sign({ id: req.userUuid }, process.env.JWT_ACCESS_SECRET, {
-      expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
-    });
+    let newAccessToken = jwt.sign(
+      { id: req.userUuid },
+      process.env.JWT_ACCESS_SECRET,
+      {
+        expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
+      }
+    );
 
-    return res
-      .status(201)
-      .json({
-        message: "New access token created",
-        access_token: newAccessToken,
-      });
+    return res.status(201).json({
+      message: "New access token created",
+      access_token: newAccessToken,
+    });
   } else {
     //If token invalid return 403, NO 401 because with 401 the frontend send req tu refresh token, and that would cause an infinite loop
     return res.status(403).json({ message: "Invalid token" });
+  }
+};
+
+const getUser = async (req, res) => {
+  try {
+    const userFound = await User.findOne({
+      where: {
+        uuid: req.userUuid,
+      },
+      attributes: ["username", "createdAt", "updatedAt"],
+    });
+
+    const userEndpointsFound = await Url.findAll({
+      where: {
+        user: req.userUuid,
+      },
+      attributes: ["uuid", "long", "short", "createdAt", "updatedAt"],
+    });
+
+    if (userFound === null) {
+      return res.status(404).json({ message: "User not found" });
+    } else {
+      return res.status(200).json({
+        user: {
+          username: userFound.username,
+          createdAt: userFound.createdAt,
+          updatedAt: userFound.updatedAt,
+          endpoints: userEndpointsFound.length,
+        },
+        endpoints: userEndpointsFound,
+      });
+    }
+  } catch (e) {
+    return res.status(500).json({ message: "Unknown error" });
   }
 };
 
@@ -152,5 +204,6 @@ module.exports = {
   signup,
   signin,
   signout,
-  refreshToken
+  refreshToken,
+  getUser,
 };
