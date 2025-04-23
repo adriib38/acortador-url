@@ -1,9 +1,11 @@
-const User = require("../Models/AuthModels.js");
+const User = require("../models/authModels.js");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
-const { Url } = require("../Models/models.js");
-const { validateUsername, validatePassword } = require("../services/validationService");
+const { Url } = require("../models/models.js");
+const { validateUsername, validatePassword } = require("../utils/validationService.js");
+const { isPasswordCorrect } = require("../services/authService");
+const { findUserByUsername, createUser } = require("../services/userService");
 
 require("dotenv").config();
 
@@ -26,8 +28,7 @@ const signup = async (req, res) => {
   }
 
   try {
-    let userFound = await User.create({
-      uuid: uuidv4(),
+    let userFound = await createUser({
       username: user.username,
       password: user.password,
     });
@@ -73,17 +74,12 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   const user = req.body;
 
-  // In signin the validation is not necessary only required
   if (!user.username || !user.password) {
     return res.status(400).json({ message: "Username and password required" });
   }
 
   try {
-    let userFound = await User.findOne({
-      where: {
-        username: user.username,
-      },
-    });
+    let userFound = await findUserByUsername(user.username);
 
     if (userFound === null) {
       return res.status(404).json({ message: "User not found" });
@@ -149,7 +145,7 @@ const refreshToken = async (req, res) => {
   const isValid = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
   if (isValid) {
-    req.userUuid = isValid.id; //Get user uuid from token
+    req.userUuid = isValid.id;
     let newAccessToken = jwt.sign(
       { id: req.userUuid },
       process.env.JWT_ACCESS_SECRET,
@@ -170,12 +166,11 @@ const refreshToken = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const userFound = await User.findOne({
-      where: {
-        uuid: req.userUuid,
-      },
-      attributes: ["username", "createdAt", "updatedAt"],
-    });
+    const userFound = await findUserByUsername(req.userUuid, [
+      "username",
+      "createdAt",
+      "updatedAt",
+    ]);
 
     const userEndpointsFound = await Url.findAll({
       where: {
@@ -200,10 +195,6 @@ const getUser = async (req, res) => {
   } catch (e) {
     return res.status(500).json({ message: "Unknown error" });
   }
-};
-
-const isPasswordCorrect = async (password, hashedPassword) => {
-  return bcrypt.compare(password, hashedPassword);
 };
 
 module.exports = {

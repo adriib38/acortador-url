@@ -20,7 +20,7 @@ src/
 ├── app.js               # Configuración principal del servidor Express
 ├── index.js             # Levantar servidor Express
 ├── controllers/         # Controladores para manejar la lógica de las rutas
-├── Models/              # Definición de modelos y relaciones de orm Sequelize
+├── models/              # Definición de modelos y relaciones de orm Sequelize
 ├── services/            # Servicios como la conexión a la base de datos
 ├── utils/               # Utilidades como validación de URLs
 

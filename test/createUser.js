@@ -1,4 +1,4 @@
-const {User} = require("../src/Models/AuthModels")
+const {User} = require("../src/models/authModels")
 const { v4: uuidv4 } = require('uuid');
 
 const createUser = async () => {
