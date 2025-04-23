@@ -41,6 +41,7 @@ const signup = async (req, res) => {
       }
     );
 
+    //TODO: save refresh token in db for can invalidate it if user change password or delete account
     let refreshToken = jwt.sign(
       { id: userFound.uuid },
       process.env.JWT_REFRESH_SECRET,
@@ -129,10 +130,24 @@ const signin = async (req, res) => {
 };
 
 const signout = async (req, res) => {
-  res.cookie("access_token", "none", {
-    expires: new Date(Date.now() + 5 * 1000),
+  let refreshToken = req.cookies.refresh_token;
+  if (!refreshToken) {
+    return res.status(403).json({ message: "No token provided" });
+  }
+
+  const isValid = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  if (!isValid) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
+
+  //Delete refresh token from cookies
+  res.clearCookie("refresh_token", {
     httpOnly: true,
+    secure: true,
+    sameSite: "strict",
   });
+
+
   res.status(200).json({ message: "User logged out successfully" });
 };
 
