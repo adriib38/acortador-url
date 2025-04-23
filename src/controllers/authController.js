@@ -3,17 +3,25 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 const { Url } = require("../Models/models.js");
+const { validateUsername, validatePassword } = require("../services/validationService");
 
 require("dotenv").config();
 
 //Register new users
 const signup = async (req, res) => {
-  //TODO: Validate username and password (regex)
   let user = req.body;
 
-  if (!user.username || !user.password) {
+  const usernameValidation = validateUsername(user.username);
+  if (!usernameValidation.valid) {
     return res.status(400).json({
-      message: "Username and password required.",
+      message: usernameValidation.message,
+    });
+  }
+
+  const passwordValidation = validatePassword(user.password);
+  if (!passwordValidation.valid) {
+    return res.status(400).json({
+      message: passwordValidation.message,
     });
   }
 
@@ -65,12 +73,10 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   const user = req.body;
 
+  // In signin the validation is not necessary only required
   if (!user.username || !user.password) {
-    return res.status(400).json({
-      message: "Username and password required.",
-    });
+    return res.status(400).json({ message: "Username and password required" });
   }
-  //TODO: Validate username and password (regex)
 
   try {
     let userFound = await User.findOne({
@@ -83,7 +89,7 @@ const signin = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    let validPassword = await validatePassword(
+    let validPassword = await isPasswordCorrect(
       user.password,
       userFound.dataValues.password
     );
@@ -196,7 +202,7 @@ const getUser = async (req, res) => {
   }
 };
 
-const validatePassword = async (password, hashedPassword) => {
+const isPasswordCorrect = async (password, hashedPassword) => {
   return bcrypt.compare(password, hashedPassword);
 };
 
