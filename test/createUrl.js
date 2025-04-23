@@ -1,4 +1,4 @@
-const {Url} = require("../src/Models/models")
+const {Url} = require("../src/models/models")
 const { v4: uuidv4 } = require('uuid');
 
 const createUrl = async () => {

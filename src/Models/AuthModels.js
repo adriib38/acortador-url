@@ -27,7 +27,6 @@ const User = sequelize.define('User',{
         beforeCreate: async (user) => {
             const saltRounds = parseInt(process.env.SALT_ROUNDS, 10);
             user.password = bcrypt.hashSync(user.password, saltRounds)
-
         },
     }
 })

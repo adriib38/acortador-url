@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../services/db.js');
-const User = require("./AuthModels.js");
+const User = require("./authModels.js");
 
 const Url = sequelize.define('Url', {
     uuid: { 
