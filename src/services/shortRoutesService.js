@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
-const { Url } = require("../models/models.js");
+const Url = require("../models/Url.js");
 
 const URL_BASE_SHORT = process.env.URL_BASE_SHORT;
 

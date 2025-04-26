@@ -1,6 +1,7 @@
 require("dotenv").config();
 const { getUrlByShort, getUrlShorted } = require("../services/shortRoutesService.js");
-const { Url, AccessUrls } = require('../models/models.js');
+const { Url } = require("../models/Url.js");
+const AccessUrls = require("../models/AccessUrls.js");
 const { validateUrl } = require("../utils/validationService.js");
 const { v4: uuidv4 } = require('uuid');
 

@@ -1,6 +1,5 @@
-const e = require("express");
-const { User } = require("../models/authModels.js");
-const { RefreshToken } = require("../models/authModels.js");
+const User = require("../models/User.js");
+const RefreshToken = require("../models/RefreshToken.js");
 const { v4: uuidv4 } = require("uuid");
 
 const findUserByUsername = async (username, attr) => {

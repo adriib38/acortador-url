@@ -1,8 +1,6 @@
-const User = require("../models/authModels.js");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const bcrypt = require("bcrypt");
-const { Url } = require("../models/models.js");
+const { Url } = require("../models/Url.js");
 const {
   validateUsername,
   validatePassword,
