@@ -10,12 +10,12 @@ const findUserByUsername = async (username, attr) => {
   });
 };
 
-const createUser = async ({ username, password }) => {
+const createUser = async ({ username, password }, t) => {
   return await User.create({
     uuid: uuidv4(),
     username,
     password,
-  });
+  }, { transaction: t })
 };
 
 const saveRefreshTokenInDb = async (userUuid, jti, exp, t) => {

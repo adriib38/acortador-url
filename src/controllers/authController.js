@@ -30,7 +30,6 @@ const signup = async (req, res) => {
     });
   }
 
-  // TODO: add rollback if error
   const passwordValidation = validatePassword(user.password);
   if (!passwordValidation.valid) {
     return res.status(400).json({
