@@ -7,7 +7,7 @@ router
     .post("/signup", authController.signup)
     .post("/signin", authController.signin)
     .get("/signout", authController.signout)
-    .get("/refresh-token", authController.refreshToken)
+    .get("/refresh-token", authController.getNewAccessTokenFromRefreshToken)
     .get("/get-user", authUser, authController.getUser)
 
 
