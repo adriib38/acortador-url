@@ -39,11 +39,12 @@ const signup = async (req, res) => {
 
   const t = await sequelize.transaction();
   try {
-    let userFound = await createUser({
+    let userFound = await createUser(
+     {
       username: user.username,
       password: user.password,
-    }, 
-      { transaction: t }
+      transaction: t,
+     } 
     );
 
     let accessToken = jwt.sign(
