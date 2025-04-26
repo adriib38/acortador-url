@@ -14,6 +14,8 @@ const {
   existTokenInDb,
   removeTokenFromDb,
 } = require("../services/userService");
+const sequelize = require("../services/db.js");
+
 
 require("dotenv").config();
 
@@ -36,11 +38,14 @@ const signup = async (req, res) => {
     });
   }
 
+  const t = await sequelize.transaction();
   try {
     let userFound = await createUser({
       username: user.username,
       password: user.password,
-    });
+    }, 
+      { transaction: t }
+    );
 
     let accessToken = jwt.sign(
       {
@@ -65,8 +70,9 @@ const signup = async (req, res) => {
 
     //Save refresh token in db
     const decoded = jwt.decode(refreshToken);
-    await saveRefreshTokenInDb(userFound.uuid, decoded.jti, decoded.exp);
+    await saveRefreshTokenInDb(userFound.uuid, decoded.jti, decoded.exp, t);
 
+    await t.commit();
     return res
       .status(201)
       .cookie("refresh_token", refreshToken, {
@@ -86,6 +92,7 @@ const signup = async (req, res) => {
         access_token: accessToken,
       });
   } catch (e) {
+    await t.rollback();
     if (e.parent?.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ error: "Username already exists" });
     }

@@ -18,13 +18,13 @@ const createUser = async ({ username, password }) => {
   });
 };
 
-const saveRefreshTokenInDb = async (userUuid, jti, exp) => {
+const saveRefreshTokenInDb = async (userUuid, jti, exp, t) => {
   return await RefreshToken.create({
     uuid: uuidv4(),
     jti,
     userUuid,
     exp,
-  });
+  }, { transaction: t });
 }
 
 const removeTokenFromDb = async (jti) => {
