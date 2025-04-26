@@ -31,5 +31,28 @@ const User = sequelize.define('User',{
     }
 })
 
+const RefreshToken = sequelize.define('RefreshToken', {
+    uuid: { 
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false,
+    },
+    jti: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    userUuid: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'uuid',
+        },
+    }
+});
 
-module.exports = User;
+module.exports = {
+    User,
+    RefreshToken,
+};

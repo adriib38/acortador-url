@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../services/db.js');
-const User = require("./authModels.js");
+const { User } = require("./authModels.js");
 
 const Url = sequelize.define('Url', {
     uuid: { 
@@ -23,7 +23,6 @@ const Url = sequelize.define('Url', {
         },
     },
 });
-
 
 const AccessUrls = sequelize.define('accessUrls', {
     uuid: { 

@@ -3,9 +3,17 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 const { Url } = require("../models/models.js");
-const { validateUsername, validatePassword } = require("../utils/validationService.js");
+const {
+  validateUsername,
+  validatePassword,
+} = require("../utils/validationService.js");
 const { isPasswordCorrect } = require("../services/authService");
 const { findUserByUsername, createUser } = require("../services/userService");
+const {
+  saveRefreshTokenInDb,
+  existTokenInDb,
+  removeTokenFromDb,
+} = require("../services/userService");
 
 require("dotenv").config();
 
@@ -20,6 +28,7 @@ const signup = async (req, res) => {
     });
   }
 
+  // TODO: add rollback if error
   const passwordValidation = validatePassword(user.password);
   if (!passwordValidation.valid) {
     return res.status(400).json({
@@ -34,21 +43,29 @@ const signup = async (req, res) => {
     });
 
     let accessToken = jwt.sign(
-      { id: userFound.uuid },
+      {
+        id: userFound.uuid,
+      },
       process.env.JWT_ACCESS_SECRET,
       {
         expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
       }
     );
 
-    //TODO: save refresh token in db for can invalidate it if user change password or delete account
     let refreshToken = jwt.sign(
-      { id: userFound.uuid },
+      {
+        id: userFound.uuid,
+        jti: uuidv4(),
+      },
       process.env.JWT_REFRESH_SECRET,
       {
         expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
       }
     );
+
+    //Save refresh token in db
+    const decoded = jwt.decode(refreshToken);
+    await saveRefreshTokenInDb(userFound.uuid, decoded.jti, decoded.exp);
 
     return res
       .status(201)
@@ -56,7 +73,12 @@ const signup = async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: 1000 * 60 * 60,
+        maxAge:
+          parseInt(process.env.JWT_REFRESH_EXPIRATION_TIME.split("d")[0]) *
+          24 *
+          60 *
+          60 *
+          1000,
       })
       .json({
         message: "User created",
@@ -68,7 +90,7 @@ const signup = async (req, res) => {
       return res.status(409).json({ error: "Username already exists" });
     }
 
-    return res.status(500).json({ error: "Unknown error" });
+    return res.status(500).json({ error: e.message });
   }
 };
 
@@ -116,7 +138,12 @@ const signin = async (req, res) => {
           httpOnly: true,
           secure: true,
           sameSite: "strict",
-          maxAge: 1000 * 60 * 60,
+          maxAge:
+            parseInt(process.env.JWT_REFRESH_EXPIRATION_TIME.split("d")[0]) *
+            24 *
+            60 *
+            60 *
+            1000,
         })
         .json({
           message: "User logged in",
@@ -135,10 +162,16 @@ const signout = async (req, res) => {
     return res.status(403).json({ message: "No token provided" });
   }
 
+  //Check if the refresh token is valid
   const isValid = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
   if (!isValid) {
     return res.status(403).json({ message: "Invalid token" });
   }
+
+  // Delete refresh token from db
+  const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  const jti = decoded.jti;
+  await removeTokenFromDb(jti);
 
   //Delete refresh token from cookies
   res.clearCookie("refresh_token", {
@@ -147,36 +180,7 @@ const signout = async (req, res) => {
     sameSite: "strict",
   });
 
-
   res.status(200).json({ message: "User logged out successfully" });
-};
-
-const refreshToken = async (req, res) => {
-  let refreshToken = req.cookies.refresh_token;
-  if (!refreshToken) {
-    return res.status(403).json({ message: "No token provided" });
-  }
-
-  const isValid = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
-  if (isValid) {
-    req.userUuid = isValid.id;
-    let newAccessToken = jwt.sign(
-      { id: req.userUuid },
-      process.env.JWT_ACCESS_SECRET,
-      {
-        expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
-      }
-    );
-
-    return res.status(201).json({
-      message: "New access token created",
-      access_token: newAccessToken,
-    });
-  } else {
-    //If token invalid return 403, NO 401 because with 401 the frontend send req tu refresh token, and that would cause an infinite loop
-    return res.status(403).json({ message: "Invalid token" });
-  }
 };
 
 const getUser = async (req, res) => {
@@ -212,10 +216,51 @@ const getUser = async (req, res) => {
   }
 };
 
+const getNewAccessTokenFromRefreshToken = async (req, res) => {
+  try {
+    let refreshToken = req.cookies.refresh_token;
+    if (!refreshToken) {
+      return res.status(403).json({ message: "No token provided" });
+    }
+
+    //Get jti for search in db
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const jti = decoded.jti;
+
+    /**
+     * If the token is valid but not in the database, the method will throw a "invalid token" error. (The user changed the password or deleted the account)
+     * If the token is old or false, the method will throw a "invalid token" error.
+     */
+    const _existTokenInDb = await existTokenInDb(jti);
+    const isValid = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    if (isValid && _existTokenInDb) {
+      req.userUuid = isValid.id;
+      let newAccessToken = jwt.sign(
+        { id: req.userUuid },
+        process.env.JWT_ACCESS_SECRET,
+        {
+          expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
+        }
+      );
+
+      return res.status(201).json({
+        message: "New access token created",
+        access_token: newAccessToken,
+      });
+    } else {
+      //If token invalid return 403, NO 401 because with 401 the frontend send req tu refresh token, and that would cause an infinite loop
+      return res.status(403).json({ message: "Invalid token" });
+    }
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+};
+
 module.exports = {
   signup,
   signin,
   signout,
-  refreshToken,
+  getNewAccessTokenFromRefreshToken,
   getUser,
 };
