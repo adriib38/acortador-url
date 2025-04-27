@@ -1,23 +1,28 @@
 require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const Url = require("../models/Url.js");
-
+const getQrFromUrl = require("../services/qrGenerator.js");
 const URL_BASE_SHORT = process.env.URL_BASE_SHORT;
 
 const getUrlShorted = async (url, user) => {
   try {
-    const _uuid = uuidv4();
-    const ext = _uuid.split("-")[0];
+    const urlUuid = uuidv4();
+    const ext = urlUuid.split("-")[0];
 
-    const shortUrl = `${URL_BASE_SHORT}/${ext}`;
+    const shortUrl = `${URL_BASE_SHORT}/u/${ext}`;
+    const qr = await getQrFromUrl(shortUrl, ext);
 
     await Url.create({
-      uuid: _uuid,
+      uuid: urlUuid,
       long: url,
       short: shortUrl,
+      qrFileName: qr,
       user: user,
     });
-    return shortUrl;
+    return {
+      short: shortUrl,
+      qrFileName: qr,
+    };
   } catch (error) {
     throw new Error("Error creating short URL");
   }
@@ -25,7 +30,6 @@ const getUrlShorted = async (url, user) => {
 
 const getUrlByShort = async (short) => {
   try {
-
     const url = await Url.findOne({
       where: {
         short: short,
@@ -36,6 +40,7 @@ const getUrlByShort = async (short) => {
     }
     return url;
   } catch (error) {
+    console.error("Error retrieving URL:", short, error);
     throw new Error("Error retrieving URL");
   }
 };

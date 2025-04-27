@@ -25,6 +25,8 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(logger('tiny'));
 
+app.use(express.static('public'));
+
 // Import routes
 app.use("/auth", require("./routes/auth"));
 app.use("/", require("./routes/shortroutes")); 
