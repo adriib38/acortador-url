@@ -6,12 +6,12 @@ Este proyecto es una aplicación para acortar URLs, diseñada para facilitar la 
 
 - **Autenticación de usuarios:**
   - Registro y login de usuarios.
-  - Protección de rutas mediante autenticación con JWT.
+  - Protección de rutas mediante autenticación con access token y refresh token con JWT.
+  - Limite de peticiones por IP con express-rate-limit.
 - **Gestión de URLs:**
   - Asociación de URLs cortas con usuarios registrados.
   - Redirección a URLs originales a través de rutas dinámicas.
-- **Middleware de validación:**
-  - Validación de URLs antes de acortarlas.
+  - Creación de codigos Qr para enlaces acortados.
 
 ## Estructura del proyecto
 
