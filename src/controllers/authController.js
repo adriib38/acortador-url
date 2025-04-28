@@ -1,17 +1,17 @@
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const { Url } = require("../models/Url.js");
+const Url = require("../models/Url.js");
 const {
   validateUsername,
   validatePassword,
 } = require("../utils/validationService.js");
 const { isPasswordCorrect } = require("../services/authService");
-const { findUserByUsername, createUser } = require("../services/userService");
+const { findUserByUuid, createUser } = require("../services/userService");
 const {
   saveRefreshTokenInDb,
   existTokenInDb,
   removeTokenFromDb,
-} = require("../services/userService");
+} = require("../services/userService"); 
 const sequelize = require("../services/db.js");
 
 
@@ -190,7 +190,7 @@ const signout = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const userFound = await findUserByUsername(req.userUuid, [
+    const userFound = await findUserByUuid(req.userUuid, [
       "username",
       "createdAt",
       "updatedAt",
@@ -217,7 +217,7 @@ const getUser = async (req, res) => {
       });
     }
   } catch (e) {
-    return res.status(500).json({ message: "Unknown error" });
+    return res.status(500).json({ message: e.message });
   }
 };
 

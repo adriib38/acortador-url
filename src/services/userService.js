@@ -2,9 +2,9 @@ const User = require("../models/User.js");
 const RefreshToken = require("../models/RefreshToken.js");
 const { v4: uuidv4 } = require("uuid");
 
-const findUserByUsername = async (username, attr) => {
+const findUserByUuid = async (userUuid, attr) => {
   return await User.findOne({
-    where: { username },
+    where: { uuid: userUuid },
     attributes: attr,
   });
 };
@@ -39,7 +39,7 @@ const existTokenInDb = async (jti) => {
 }
 
 module.exports = {
-  findUserByUsername,
+  findUserByUuid,
   createUser,
   saveRefreshTokenInDb,
   existTokenInDb,
