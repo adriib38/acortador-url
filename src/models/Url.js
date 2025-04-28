@@ -14,6 +14,10 @@ const Url = sequelize.define('Url', {
         allowNull: false,
         unique: true,
     },
+    qrFileName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     user: {
         type: DataTypes.STRING,
         allowNull: false,

@@ -17,14 +17,16 @@ const shortRoute = async (req, res) => {
     }
 
     try {
-        const result = await getUrlShorted(url, req.userUuid);
+        const urlShort = await getUrlShorted(url, req.userUuid);
+
         return res.status(200).json({
-            url: url,
-            shortUrl: result,
+            short: urlShort.short,
+            qrFileName: `${process.env.URL_BASE_SHORT}/static/qrs/${urlShort.qrFileName}`,
         });
     } catch (err) {
         return res.status(500).json({
             error: "Error creating short URL",
+            message: err.message,
         });
     }
 };
@@ -52,7 +54,6 @@ const redirectToLongUrl = async (req, res) => {
 
     return res.redirect(longUrl.long);
 }
-
 
 const saveAccessUrl = async (access) => {
     await AccessUrls.create(access);

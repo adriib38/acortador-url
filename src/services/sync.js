@@ -1,7 +1,8 @@
 const sequelize = require("./db");
-const auth = require("../models/authModels")
-const models = require("../models/models")
-const User = require("../models/authModels")
+const Url = require("../models/Url")
+const User = require("../models/User")
+const AccessUrls = require("../models/AccessUrls")
+const RefreshToken = require("../models/RefreshToken")
 
 async function syncDatabase() {
     try {
