@@ -1,11 +1,12 @@
 const { v4: uuidv4 } = require("uuid");
 const Url = require("../models/Url.js");
 const getQrFromUrl = require("../services/qrGenerator.js");
+const e = require("express");
 const URL_BASE_SHORT = process.env.URL_BASE_SHORT;
 
 require("dotenv").config();
 
-const getUrlShorted = async (url, user) => {
+const getUrlShorted = async (url, expirationDate=null, user) => {
   try {
     const urlUuid = uuidv4();
     const ext = urlUuid.split("-")[0];
@@ -18,11 +19,13 @@ const getUrlShorted = async (url, user) => {
       long: url,
       short: shortUrl,
       qrFileName: qr,
+      expirationDate: expirationDate,
       user: user,
     });
     return {
       short: shortUrl,
       qrFileName: qr,
+      expirationDate: expirationDate,
     };
   } catch (error) {
     throw new Error("Error creating short URL");

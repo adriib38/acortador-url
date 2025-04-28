@@ -18,6 +18,10 @@ const Url = sequelize.define('Url', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    expirationDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
     user: {
         type: DataTypes.STRING,
         allowNull: false,

@@ -1,13 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
 const AccessUrls = require("../models/AccessUrls.js");
 const { getUrlByShort, getUrlShorted } = require("../services/shortRoutesService.js");
-const { validateUrl } = require("../utils/validationService.js");
+const { validateUrl, validateTimestamp } = require("../utils/validationService.js");
+const { isDatePast } = require("../utils/validationDates.js");
 
 require("dotenv").config();
 
 //Recive a long URL and return a short URL
 const shortRoute = async (req, res) => {
     let url = req.body.url;
+    let expirationDate = req.body.expirationDate || null;
 
     const urlValidation = validateUrl(url);
     if (!urlValidation.valid) {
@@ -16,12 +18,23 @@ const shortRoute = async (req, res) => {
         });
     }
 
+    //If exist expirationDate, validate it
+    if (expirationDate) {
+        const expirationDateValidation = validateTimestamp(expirationDate);
+        if (!expirationDateValidation.valid) {
+            return res.status(400).json({
+                message: expirationDateValidation.message,
+            });
+        }
+    }
+
     try {
-        const urlShort = await getUrlShorted(url, req.userUuid);
+        const urlShort = await getUrlShorted(url, expirationDate, req.userUuid);
 
         return res.status(200).json({
             short: urlShort.short,
             qrFileName: `${process.env.URL_BASE_SHORT}/static/qrs/${urlShort.qrFileName}`,
+            expirationDate: urlShort.expirationDate,
         });
     } catch (err) {
         return res.status(500).json({
@@ -38,6 +51,12 @@ const redirectToLongUrl = async (req, res) => {
     if (!longUrl) {
         return res.status(404).json({
             error: "URL not found",
+        });
+    }
+
+    if(isDatePast(longUrl.expirationDate)) {
+        return res.status(410).json({
+            error: "URL expired",
         });
     }
 
