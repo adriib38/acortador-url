@@ -192,7 +192,8 @@ const getUser = async (req, res) => {
       where: {
         user: req.userUuid,
       },
-      attributes: ["uuid", "long", "short", "createdAt", "updatedAt"],
+      attributes: ["long", "short", "expirationDate", "qrFileName", "createdAt"],
+      order: [["createdAt", "DESC"]],
     });
 
     if (userFound === null) {
@@ -205,7 +206,18 @@ const getUser = async (req, res) => {
           updatedAt: userFound.updatedAt,
           endpoints: userEndpointsFound.length,
         },
-        endpoints: userEndpointsFound,
+        endpoints: {
+          urls: userEndpointsFound.map((url) => {
+            return {
+              long: url.long,
+              short: url.short,
+              expirationDate: url.expirationDate,
+              isExpired: url.expirationDate ? new Date(url.expirationDate) < new Date() : false,
+              qrFileName: `${process.env.URL_BASE_SHORT}/static/qrs/${url.qrFileName}`,
+              createdAt: url.createdAt,
+            };
+          }),
+        }
       });
     }
   } catch (e) {
