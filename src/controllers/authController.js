@@ -3,9 +3,10 @@ const { v4: uuidv4 } = require("uuid");
 const Url = require("../models/Url.js");
 const sequelize = require("../services/db.js");
 const { isPasswordCorrect } = require("../services/authService");
-const { findUserByUuid, createUser } = require("../services/userService");
+const { findUserByUsername, findUserByUuid, createUser } = require("../services/userService");
 const { saveRefreshTokenInDb, existTokenInDb, removeTokenFromDb } = require("../services/userService"); 
 const { validateUsername, validatePassword } = require("../utils/validationService.js");
+const { col } = require("sequelize");
 
 require("dotenv").config();
 
@@ -98,10 +99,13 @@ const signin = async (req, res) => {
     return res.status(400).json({ message: "Username and password required" });
   }
 
+  const t = await sequelize.transaction();
+
   try {
     let userFound = await findUserByUsername(user.username);
 
     if (userFound === null) {
+      await t.rollback();
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -111,47 +115,60 @@ const signin = async (req, res) => {
     );
 
     if (!validPassword) {
+      await t.rollback();
       return res.status(401).json({ message: "Invalid password" });
-    } else {
-      let accessToken = jwt.sign(
-        { id: userFound.dataValues.uuid },
-        process.env.JWT_ACCESS_SECRET,
-        {
-          expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
-        }
-      );
-
-      let refreshToken = jwt.sign(
-        { id: userFound.dataValues.uuid },
-        process.env.JWT_REFRESH_SECRET,
-        {
-          expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
-        }
-      );
-
-      return res
-        .status(200)
-        .cookie("refresh_token", refreshToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-          maxAge:
-            parseInt(process.env.JWT_REFRESH_EXPIRATION_TIME.split("d")[0]) *
-            24 *
-            60 *
-            60 *
-            1000,
-        })
-        .json({
-          message: "User logged in",
-          user: userFound.username,
-          access_token: accessToken,
-        });
     }
+
+    let accessToken = jwt.sign(
+      { id: userFound.dataValues.uuid },
+      process.env.JWT_ACCESS_SECRET,
+      {
+        expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME,
+      }
+    );
+
+    let refreshToken = jwt.sign(
+      { 
+        id: userFound.dataValues.uuid,
+        jti: uuidv4(),
+      },
+      process.env.JWT_REFRESH_SECRET,
+      {
+        expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME,
+      }
+    );
+
+    const decoded = jwt.decode(refreshToken);
+
+    await saveRefreshTokenInDb(userFound.uuid, decoded.jti, decoded.exp, t);
+
+    await t.commit();
+
+    return res
+      .status(200)
+      .cookie("refresh_token", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge:
+          parseInt(process.env.JWT_REFRESH_EXPIRATION_TIME.split("d")[0]) *
+          24 *
+          60 *
+          60 *
+          1000,
+      })
+      .json({
+        message: "User logged in",
+        user: userFound.username,
+        access_token: accessToken,
+      });
+
   } catch (e) {
-    return res.status(500).json({ message: "Unknown error" });
+    await t.rollback();
+    return res.status(500).json({ message: e.message });
   }
 };
+
 
 const signout = async (req, res) => {
   let refreshToken = req.cookies.refresh_token;
@@ -168,6 +185,7 @@ const signout = async (req, res) => {
   // Delete refresh token from db
   const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
   const jti = decoded.jti;
+
   await removeTokenFromDb(jti);
 
   //Delete refresh token from cookies

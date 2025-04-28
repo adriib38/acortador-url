@@ -9,6 +9,13 @@ const findUserByUuid = async (userUuid, attr) => {
   });
 };
 
+const findUserByUsername = async (username) => {
+  return await User.findOne({
+    where: { username: username },
+    attributes: ["uuid", "username", "password"],
+  });
+}
+
 const createUser = async ({username, password, transaction}) => {
   return await User.create({
     uuid: uuidv4(),
@@ -40,6 +47,7 @@ const existTokenInDb = async (jti) => {
 
 module.exports = {
   findUserByUuid,
+  findUserByUsername,
   createUser,
   saveRefreshTokenInDb,
   existTokenInDb,
