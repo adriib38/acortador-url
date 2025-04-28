@@ -7,7 +7,7 @@ const getQrFromUrl = async (url, slug) => {
         const qrCode = await QRCode.toDataURL(url);
         let base64Data = qrCode.replace(/^data:image\/png;base64,/, "");
         let name = `qr${slug}`;
-        let filePath = path.join(__dirname, "..", "..", "public", "qrs", `${name}.png`);
+        let filePath = path.join(__dirname, "..", "..", "public", "static", "qrs", `${name}.png`);
 
         fs.writeFileSync(filePath, base64Data, "base64", function (err) {
             console.log(err);

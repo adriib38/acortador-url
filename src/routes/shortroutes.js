@@ -9,7 +9,7 @@ router
     // create a short URL
     .post("/c", authUser, shortRoutesController.shortRoute)
     // redirect to the original URL
-    .get("/u/:ext", shortRoutesController.redirectToLongUrl);
+    .get("/:ext", shortRoutesController.redirectToLongUrl);
 
 
 module.exports = router;

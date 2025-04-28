@@ -9,7 +9,7 @@ const getUrlShorted = async (url, user) => {
     const urlUuid = uuidv4();
     const ext = urlUuid.split("-")[0];
 
-    const shortUrl = `${URL_BASE_SHORT}/u/${ext}`;
+    const shortUrl = `${URL_BASE_SHORT}/${ext}`;
     const qr = await getQrFromUrl(shortUrl, ext);
 
     await Url.create({
