@@ -87,7 +87,7 @@ const signup = async (req, res) => {
       return res.status(409).json({ error: "Username already exists" });
     }
 
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: "Unknown error" });
   }
 };
 
@@ -192,7 +192,8 @@ const getUser = async (req, res) => {
       where: {
         user: req.userUuid,
       },
-      attributes: ["uuid", "long", "short", "createdAt", "updatedAt"],
+      attributes: ["long", "short", "expirationDate", "qrFileName", "createdAt"],
+      order: [["createdAt", "DESC"]],
     });
 
     if (userFound === null) {
@@ -205,11 +206,22 @@ const getUser = async (req, res) => {
           updatedAt: userFound.updatedAt,
           endpoints: userEndpointsFound.length,
         },
-        endpoints: userEndpointsFound,
+        endpoints: {
+          urls: userEndpointsFound.map((url) => {
+            return {
+              long: url.long,
+              short: url.short,
+              expirationDate: url.expirationDate,
+              isExpired: url.expirationDate ? new Date(url.expirationDate) < new Date() : false,
+              qrFileName: `${process.env.URL_BASE_SHORT}/static/qrs/${url.qrFileName}`,
+              createdAt: url.createdAt,
+            };
+          }),
+        }
       });
     }
   } catch (e) {
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: "Unknown error" });
   }
 };
 
@@ -250,7 +262,7 @@ const getNewAccessTokenFromRefreshToken = async (req, res) => {
       return res.status(403).json({ message: "Invalid token" });
     }
   } catch (e) {
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: "Unknown error" });
   }
 };
 

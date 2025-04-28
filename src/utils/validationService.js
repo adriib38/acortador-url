@@ -30,8 +30,18 @@ const validateUrl = (url) => {
   }
 }
 
+const validateTimestamp = (timestamp) => {
+  //convert timestamp epoch to date
+  const date = new Date(timestamp);
+  return {
+    "valid": !isNaN(date.getTime()),
+    "message": !isNaN(date.getTime()) ? "" : "Invalid timestamp. ust be a valid timestamp."
+  };
+}
+
 module.exports = {
   validateUsername,
   validatePassword,
-  validateUrl
+  validateUrl,
+  validateTimestamp,
 };
