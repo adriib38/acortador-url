@@ -1,6 +1,6 @@
+const { v4: uuidv4 } = require("uuid");
 const User = require("../models/User.js");
 const RefreshToken = require("../models/RefreshToken.js");
-const { v4: uuidv4 } = require("uuid");
 
 const findUserByUuid = async (userUuid, attr) => {
   return await User.findOne({

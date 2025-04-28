@@ -1,19 +1,11 @@
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const Url = require("../models/Url.js");
-const {
-  validateUsername,
-  validatePassword,
-} = require("../utils/validationService.js");
+const sequelize = require("../services/db.js");
 const { isPasswordCorrect } = require("../services/authService");
 const { findUserByUuid, createUser } = require("../services/userService");
-const {
-  saveRefreshTokenInDb,
-  existTokenInDb,
-  removeTokenFromDb,
-} = require("../services/userService"); 
-const sequelize = require("../services/db.js");
-
+const { saveRefreshTokenInDb, existTokenInDb, removeTokenFromDb } = require("../services/userService"); 
+const { validateUsername, validatePassword } = require("../utils/validationService.js");
 
 require("dotenv").config();
 

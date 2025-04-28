@@ -1,5 +1,5 @@
-const {Url} = require("../src/models/models")
 const { v4: uuidv4 } = require('uuid');
+const { Url } = require("../src/models/models")
 
 const createUrl = async () => {
     await Url.create({

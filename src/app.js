@@ -1,8 +1,8 @@
 const express = require('express');
 const logger = require('morgan');
 const cookieParser = require("cookie-parser");
-const app = express();
 const rateLimit = require('express-rate-limit');
+const app = express();
 
 const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
 

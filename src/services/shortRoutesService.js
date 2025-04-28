@@ -1,8 +1,9 @@
-require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const Url = require("../models/Url.js");
 const getQrFromUrl = require("../services/qrGenerator.js");
 const URL_BASE_SHORT = process.env.URL_BASE_SHORT;
+
+require("dotenv").config();
 
 const getUrlShorted = async (url, user) => {
   try {
