@@ -39,6 +39,7 @@ const removeTokenFromDb = async (jti) => {
   });
 }
 
+
 const existTokenInDb = async (jti) => {
   return await RefreshToken.findOne({
     where: { jti },
@@ -51,5 +52,5 @@ module.exports = {
   createUser,
   saveRefreshTokenInDb,
   existTokenInDb,
-  removeTokenFromDb,
+  removeTokenFromDb
 };

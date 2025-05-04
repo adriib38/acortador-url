@@ -4,9 +4,9 @@ const Url = require("../models/Url.js");
 const sequelize = require("../services/db.js");
 const { isPasswordCorrect } = require("../services/authService");
 const { findUserByUsername, findUserByUuid, createUser } = require("../services/userService");
+const { getEndpointsByUser } = require("../services/shortRoutesService.js");
 const { saveRefreshTokenInDb, existTokenInDb, removeTokenFromDb } = require("../services/userService"); 
 const { validateUsername, validatePassword } = require("../utils/validationService.js");
-const { col } = require("sequelize");
 
 require("dotenv").config();
 
@@ -200,48 +200,28 @@ const signout = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const userFound = await findUserByUuid(req.userUuid, [
-      "username",
-      "createdAt",
-      "updatedAt",
-    ]);
-
-    const userEndpointsFound = await Url.findAll({
-      where: {
-        user: req.userUuid,
-      },
-      attributes: ["long", "short", "expirationDate", "qrFileName", "createdAt"],
-      order: [["createdAt", "DESC"]],
-    });
-
-    if (userFound === null) {
-      return res.status(404).json({ message: "User not found" });
-    } else {
-      return res.status(200).json({
-        user: {
-          username: userFound.username,
-          createdAt: userFound.createdAt,
-          updatedAt: userFound.updatedAt,
-          endpoints: userEndpointsFound.length,
-        },
-        endpoints: {
-          urls: userEndpointsFound.map((url) => {
-            return {
-              long: url.long,
-              short: url.short,
-              expirationDate: url.expirationDate,
-              isExpired: url.expirationDate ? new Date(url.expirationDate) < new Date() : false,
-              qrFileName: `${process.env.URL_BASE_SHORT}/static/qrs/${url.qrFileName}`,
-              createdAt: url.createdAt,
-            };
-          }),
-        }
-      });
+    const userUuid = req.userUuid;
+    if (!userUuid) {
+      return res.status(403).json({ message: "No token provided" });
     }
-  } catch (e) {
-    return res.status(500).json({ message: "Unknown error" });
+
+    const user = await findUserByUuid(userUuid);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const urls = await getEndpointsByUser(user.dataValues.uuid);
+
+    return res.status(200).json({
+      user: user.username,
+      urls: urls,
+    });
+  }
+  catch (e) {
+    return res.status(500).json({ message: e.message });
   }
 };
+
 
 const getNewAccessTokenFromRefreshToken = async (req, res) => {
   try {

@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const Url = require("../models/Url.js");
+const accessUrls = require("../models/AccessUrls.js");
 const getQrFromUrl = require("../services/qrGenerator.js");
 const e = require("express");
 const URL_BASE_SHORT = process.env.URL_BASE_SHORT;
@@ -49,7 +50,44 @@ const getUrlByShort = async (short) => {
   }
 };
 
+const getEndpointsByUser = async (user) => {
+  try {
+    const urls = await Url.findAll({
+      where: {
+        user: user,
+      },
+      attributes: ["long", "short", "expirationDate", "qrFileName", "createdAt"],
+      order: [["createdAt", "DESC"]],
+    });
+
+    const urlsWithVisits = await Promise.all(
+      urls.map(async (url) => {
+        console.log(url);
+        const visits = await accessUrls.count({
+          where: {
+            shortUrl: url.dataValues.short,
+          },
+        });
+        return {
+          long: url.long,
+          short: url.short,
+          expirationDate: url.expirationDate,
+          isExpired: url.expirationDate ? new Date(url.expirationDate) < new Date() : false,
+          qrFileName: `${process.env.URL_BASE_SHORT}/static/qrs/${url.qrFileName}`,
+          createdAt: url.createdAt,
+          visits: visits,
+        };
+      })
+    );
+    return urlsWithVisits;
+  } catch (error) {
+    console.error("Error retrieving URLs:", error);
+    throw new Error("Error retrieving URLs");
+  }
+}
+
 module.exports = {
   getUrlShorted,
-  getUrlByShort
+  getUrlByShort,
+  getEndpointsByUser,
 }
