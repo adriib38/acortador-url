@@ -1,8 +1,8 @@
 const express = require('express');
 const logger = require('morgan');
 const cookieParser = require("cookie-parser");
-const app = express();
 const rateLimit = require('express-rate-limit');
+const app = express();
 
 const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
 
@@ -24,6 +24,9 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(logger('tiny'));
+
+// app.use(express.static('public'))
+app.use('/static', express.static('public/static'));
 
 // Import routes
 app.use("/auth", require("./routes/auth"));
