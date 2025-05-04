@@ -22,7 +22,7 @@ const AccessUrls = sequelize.define('accessUrls', {
     createdAt: DataTypes.DATE,
 });
 
-Url.hasMany(AccessUrls, { foreignKey: 'shortUrl', sourceKey: 'short' });
-AccessUrls.belongsTo(Url, { foreignKey: 'shortUrl', targetKey: 'short' });
+Url.hasMany(AccessUrls, { foreignKey: 'shortUrl', sourceKey: 'short', onDelete: 'CASCADE' });
+AccessUrls.belongsTo(Url, { foreignKey: 'shortUrl', targetKey: 'short' }); 
 
 module.exports = AccessUrls;

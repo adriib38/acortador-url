@@ -32,7 +32,7 @@ const Url = sequelize.define('Url', {
     },
 });
 
-User.hasMany(Url, { foreignKey: 'user', sourceKey: 'uuid' });
+User.hasMany(Url, { foreignKey: 'user', sourceKey: 'uuid', onDelete: 'CASCADE' });
 Url.belongsTo(User, { foreignKey: 'user', targetKey: 'uuid' });
 
 module.exports = Url;
