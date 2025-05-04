@@ -79,7 +79,7 @@ const redirectToLongUrl = async (req, res) => {
     if (!longUrl) {
         // Url not found
         let filePath = path.join(__dirname, "..", "..", "public", "static", "404.html");
-        return res.status(410).sendFile(filePath);
+        return res.status(404).sendFile(filePath);
    
         // return res.status(404).json({
         //     error: "URL not found",
