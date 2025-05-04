@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const Url = require("../models/Url.js");
+const refreshToken = require("../models/RefreshToken.js");
 const sequelize = require("../services/db.js");
 const { isPasswordCorrect } = require("../services/authService");
 const { findUserByUsername, findUserByUuid, createUser } = require("../services/userService");
@@ -169,7 +170,6 @@ const signin = async (req, res) => {
   }
 };
 
-
 const signout = async (req, res) => {
   let refreshToken = req.cookies.refresh_token;
   if (!refreshToken) {
@@ -222,7 +222,6 @@ const getUser = async (req, res) => {
   }
 };
 
-
 const getNewAccessTokenFromRefreshToken = async (req, res) => {
   try {
     let refreshToken = req.cookies.refresh_token;
@@ -264,10 +263,28 @@ const getNewAccessTokenFromRefreshToken = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const user = await findUserByUuid(req.userUuid);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await user.destroy();
+
+    return res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+};
+
 module.exports = {
   signup,
   signin,
   signout,
   getNewAccessTokenFromRefreshToken,
   getUser,
+  deleteUser,
 };

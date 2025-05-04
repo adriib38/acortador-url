@@ -9,6 +9,7 @@ router
     .get("/signout", authController.signout)
     .get("/refresh-token", authController.getNewAccessTokenFromRefreshToken)
     .get("/get-user", authUser, authController.getUser)
+    .delete("/delete-user", authUser, authController.deleteUser)    
 
 
 module.exports = router;

@@ -23,4 +23,7 @@ const RefreshToken = sequelize.define('RefreshToken', {
     },
 });
 
+User.hasMany(RefreshToken, { foreignKey: 'userUuid', sourceKey: 'uuid', onDelete: 'CASCADE' });
+RefreshToken.belongsTo(User, { foreignKey: 'userUuid', targetKey: 'uuid' });
+
 module.exports = RefreshToken;

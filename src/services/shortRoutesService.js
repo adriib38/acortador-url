@@ -40,9 +40,7 @@ const getUrlByShort = async (short) => {
         short: short,
       },
     });
-    if (!url) {
-      throw new Error("URL not found");
-    }
+
     return url;
   } catch (error) {
     console.error("Error retrieving URL:", short, error);
@@ -56,7 +54,7 @@ const getEndpointsByUser = async (user) => {
       where: {
         user: user,
       },
-      attributes: ["long", "short", "expirationDate", "qrFileName", "createdAt"],
+      attributes: ["uuid", "long", "short", "expirationDate", "qrFileName", "createdAt"],
       order: [["createdAt", "DESC"]],
     });
 
@@ -69,6 +67,7 @@ const getEndpointsByUser = async (user) => {
           },
         });
         return {
+          uuid: url.uuid,
           long: url.long,
           short: url.short,
           expirationDate: url.expirationDate,
@@ -86,8 +85,30 @@ const getEndpointsByUser = async (user) => {
   }
 }
 
+const deleteShortUrlByUuid = async (urlUuid, user) => {
+  try {
+    let deleteCount = await Url.destroy({
+      where: {
+        uuid: urlUuid,
+        user: user,
+      },
+    });
+    
+    if (deleteCount === 0) {
+      return false; //url not found or user not authorized
+    } else {
+      return true; //url deleted
+    }
+
+  } catch (error) {
+    return false;
+  }
+};
+
+
 module.exports = {
   getUrlShorted,
   getUrlByShort,
   getEndpointsByUser,
+  deleteShortUrlByUuid,
 }
