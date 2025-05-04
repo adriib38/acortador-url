@@ -22,9 +22,17 @@ const shortRoute = async (req, res) => {
     //If exist expirationDate, validate it
     if (expirationDate) {
         const expirationDateValidation = validateTimestamp(expirationDate);
+
         if (!expirationDateValidation.valid) {
             return res.status(400).json({
                 message: expirationDateValidation.message,
+            });
+        }
+
+        //If expirationDate is in the past, return error
+        if (isDatePast(expirationDate)) {
+            return res.status(400).json({
+                message: "Expiration date is in the past",
             });
         }
     }
