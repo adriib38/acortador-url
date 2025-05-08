@@ -1,71 +1,60 @@
 const request = require('supertest');
 const app = require('../src/app');
 const sequelize = require('../src/services/db');
-const User = require('../src/models/User');
-const Url = require('../src/models/Url');
-const e = require('express');
 
-// Utilidades para obtener token y cookie
+const USERNAME = 'adrian';
+const PASSWORD = 'Adriaaan123_';
+
 async function signupAndLogin(username, password) {
   // Signup
   const res = await request(app)
     .post('/auth/signup')
     .send({ username, password });
 
-  // Extrae la cookie refresh_token del header 'set-cookie'
+  //Get access_token and refresh_token
   const setCookie = res.headers['set-cookie'];
-  const refreshCookie = Array.isArray(setCookie)
-    ? setCookie.find(c => c.startsWith('refresh_token='))
-    : undefined;
+  const refreshCookie = setCookie.find(c => c.startsWith('refresh_token='));
 
   return {
     access_token: res.body.access_token,
-    refreshCookie: refreshCookie, // Usar esto en .set('Cookie', ...)
+    refreshCookie: refreshCookie,
     user: res.body.user,
   };
 }
 
-describe('Endpoints de autenticación y acortador', () => {
+
+describe('Authentication and URL shortening endpoints', () => {
   let auth;
-  const username = 'adriaaan';
-  const password = 'Adriaaan123_';
 
   beforeAll(async () => {
     await sequelize.sync({ force: true });
-    auth = await signupAndLogin(username, password);
+    auth = await signupAndLogin(USERNAME, PASSWORD);
   });
 
   afterAll(async () => {
     await sequelize.close();
   });
 
-  test('Login correcto devuelve access_token', async () => {
+  test('Login success returns access_token', async () => {
     const res = await request(app)
       .post('/auth/signin')
-      .send({ username, password });
+      .send({ username: USERNAME, password: PASSWORD });
     console.log(res.statusCode, res.body, res.headers);
     expect(res.statusCode).toBe(200);
     expect(res.body.access_token).toBeDefined();
   });
 
-  test('Crear usuario nuevo devuelve access_token', async () => {
+  test('Signup new user returns access_token and refresh_token', async () => {
     const res = await request(app)
       .post('/auth/signup')
-      .send({ username: 'adriaaan123', password: 'Adriaan_123' });
+      .send({ username: USERNAME + '123', password: PASSWORD + '123' });
     console.log(res.statusCode, res.body, res.headers);
     expect([200, 201]).toContain(res.statusCode);
     expect(res.body.access_token).toBeDefined();
+    expect(auth.refreshCookie).toBeDefined();
   });
 
-//   test('Cerrar sesión elimina refresh_token', async () => {
-//     const res = await request(app)
-//       .get('/auth/signout')
-//       .set('Cookie', auth.cookie);
-//     console.log(res.statusCode, res.body, res.headers);
-//     expect(res.statusCode).toBe(200);
-//   });
-
-  test('Refresh token devuelve nuevo access_token', async () => {
+  test('Refresh token returns new access_token', async () => {
     const res = await request(app)
       .get('/auth/refresh-token')
       .set('Cookie', auth.refreshCookie)
@@ -75,9 +64,17 @@ describe('Endpoints de autenticación y acortador', () => {
 
   });
 
+  test('Logout removes refresh_token', async () => {
+    const res = await request(app)
+      .get('/auth/signout')
+      .set('Cookie', auth.refreshCookie)
+    console.log(res.statusCode, res.body, res.headers);
+    expect(res.statusCode).toBe(200);
+  });
+
   let urlLong = 'https://www.google.com/';
   let urlShort;
-  test('Crear short url autenticado', async () => {
+  test('Create new short URL returns short URL', async () => {
     const res = await request(app)
       .post('/c')
       .set('authorization', `Bearer ${auth.access_token}`)
@@ -89,7 +86,7 @@ describe('Endpoints de autenticación y acortador', () => {
     urlShort = res.body.short;
   });
 
-  test('Redirige a la URL original', async () => {
+  test('Redirect to long URL', async () => {
     const resPost = await request(app)
       .post('/c')
       .set('authorization', `Bearer ${auth.access_token}`)
@@ -97,7 +94,6 @@ describe('Endpoints de autenticación y acortador', () => {
 
     console.log("Short URL: ", resPost.body.short);
 
-    // Extrae solo el path relativo de la short url
     const extension = urlShort.split('/').pop();
     const resGet = await request(app)
         .get(`/${extension}`)
@@ -106,7 +102,7 @@ describe('Endpoints de autenticación y acortador', () => {
     expect(resGet.headers.location).toBe(urlLong);
   });
 
-  test('Devuelve 404 para URL inexistente', async () => {
+  test('Returns 404 for non-existent URL', async () => {
     const res = await request(app)
       .get('/noexisteurl');
     console.log(res.statusCode, res.body, res.headers);
@@ -114,3 +110,8 @@ describe('Endpoints de autenticación y acortador', () => {
 
   });
 });
+
+// TODO:
+// DELETE short URL
+// DELETE user account
+// GET user info
