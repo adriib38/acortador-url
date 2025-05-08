@@ -94,7 +94,7 @@ const redirectToLongUrl = async (req, res) => {
         // });
     }
 
-    if(isDatePast(longUrl.expirationDate)) {
+    if(longUrl.expirationDate && isDatePast(longUrl.expirationDate)) {
         let filePath = path.join(__dirname, "..", "..", "public", "static", "410.html");
         return res.status(410).sendFile(filePath);
 
