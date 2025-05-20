@@ -5,7 +5,6 @@ import {
     logout as logoutService
 } from './authService';
 
-
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -13,17 +12,27 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const storedUser = getUser();
-        if(storedUser) setUser(storedUser);
+        if(storedUser && storedUser.username) setUser(storedUser);
+        else setUser(null);
     }, []);
 
     const login = async(credentials) => {
-        const user = await loginService(credentials)
-        setUser(user)
+        const response = await loginService(credentials);
+        //Save cookie 
+        document.cookie = `token=${response.data.access_token}; path=/; max-age=3600;`;
+  
+        const userObj = {
+            username: response.data.user,
+            access_token: response.data.access_token
+        };
+        setUser(userObj);
+        localStorage.setItem('user', JSON.stringify(userObj))
     }
 
     const logout = () => {
         logoutService();
         setUser(null);
+        localStorage.removeItem('user');
     };
 
     return (
