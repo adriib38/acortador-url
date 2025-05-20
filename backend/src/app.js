@@ -3,8 +3,13 @@ const logger = require('morgan');
 const cookieParser = require("cookie-parser");
 const rateLimit = require('express-rate-limit');
 const app = express();
+const cors = require('cors');
 
 const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
+app.use(cors({
+  origin: allowedOrigin,
+  credentials: true,
+}));
 
 app.use(cookieParser());
 const limiter = rateLimit({
@@ -17,10 +22,10 @@ const limiter = rateLimit({
 
 app.use(limiter); 
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', allowedOrigin);
-  next();
-});
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', allowedOrigin);
+//   next();
+// });
 
 app.use(express.json());
 app.use(logger('tiny'));
