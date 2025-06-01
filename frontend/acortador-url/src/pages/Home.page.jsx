@@ -1,31 +1,22 @@
 import { useContext } from "react";
 
 import { AuthContext } from "../auth/AuthContext";
-import { Navigate, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import UserLinks from "./UserLinks.page";
 
 export default function Home() {
     
-    const { isAuthenticated, user } = useContext(AuthContext);
+    const { isAuthenticated, username, accessToken } = useContext(AuthContext);
     console.log("isAuthenticated:", isAuthenticated)
 
-    console.log("user:", user)
+    console.log("username:", username)
     return (
-        <>
-            { isAuthenticated ? (
-                <div>
-                    <h2>Bienvenido, {user.username}</h2>
-                    <p>Tu token de acceso es: {user.access_token}</p>
-                    <NavLink to="/new-link">Ir a acortador</NavLink>
-                </div>
-            ) : (
-                <div>
-                    <h2>No estás autenticado</h2>
-                    <p>Por favor, inicia sesión.</p>
-                    <NavLink to="/login">Iniciar sesión</NavLink>
-                </div>
-            )}
-            
-        </>
-    );
+        <div>
+            <h2>Bienvenido, {username}</h2>
+            <p>Tu token de acceso es: {accessToken}</p>
+            <NavLink to="/new-link">Ir a acortador</NavLink>
 
+            <UserLinks />
+        </div>      
+    );
 }

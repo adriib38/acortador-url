@@ -3,7 +3,13 @@ import { useAuth } from '../auth/useAuth';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+
+  if (!isAuthenticated) {
+    console.log("Usuario no autenticado, redirigiendo a login");
+    <Navigate to="/login" replace />;
+  }
+ 
+  return children;
 };
 
 export default PrivateRoute;

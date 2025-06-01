@@ -1,10 +1,13 @@
 import { useContext } from "react";
-
 import { AuthContext } from "../auth/AuthContext";
+import { Navigate } from "react-router-dom";
 
 export default function Login() {
-
     const { user, login } = useContext(AuthContext);
+
+    if (user && user.username) {
+        return <Navigate to="/" />;
+    }
 
     const handlerSubmit = (e) => {
         e.preventDefault();

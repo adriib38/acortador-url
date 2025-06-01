@@ -1,9 +1,13 @@
 import { ENDPOINTS } from "../api/endpoints";
+import { useAuth } from "../auth/AuthContext";
+
+
 
 export const login = async (credentials) => {
   try {
     const resp = await fetch(ENDPOINTS.auth.login, {
       method: "POST",
+      credentials: 'include', 
       headers: {
         "Content-Type": "application/json",
       },
@@ -11,7 +15,6 @@ export const login = async (credentials) => {
         username: credentials.username,
         password: credentials.password,
       }),
-      credentials: "include",
     });
 
     const data = await resp.json();
@@ -21,6 +24,28 @@ export const login = async (credentials) => {
     throw error;
   }
 };
+
+export const refresh = async () => {
+
+  try {
+    const resp = await fetch(ENDPOINTS.auth.refresh, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      credentials: "include",
+      
+    });
+
+    const data = await resp.json();
+    return { status: resp.status, data: data };
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    throw error;
+  }
+}
+
 
 export const logout = () => {};
 
