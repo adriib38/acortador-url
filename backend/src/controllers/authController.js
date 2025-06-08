@@ -177,16 +177,27 @@ const signout = async (req, res) => {
   }
 
   //Check if the refresh token is valid
-  const isValid = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-  if (!isValid) {
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  } catch (err) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
+
+  if (!decoded) {
     return res.status(403).json({ message: "Invalid token" });
   }
 
   // Delete refresh token from db
-  const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
   const jti = decoded.jti;
 
   await removeTokenFromDb(jti);
+
+  //Invalidate access token, expiring it immediately
+  res.cookie("access_token", "none", {
+    expires: new Date(Date.now() + 5 * 1000), 
+    httpOnly: true,
+  });
 
   //Delete refresh token from cookies
   res.clearCookie("refresh_token", {
