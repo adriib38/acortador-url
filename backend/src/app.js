@@ -14,7 +14,7 @@ app.use(cors({
 app.use(cookieParser());
 const limiter = rateLimit({
 	windowMs: 60 * 24 * 1000, // 60 minutes
-	limit: 100, //Limit request by IP
+	limit: 1100, //Limit request by IP
 	standardHeaders: true,
 	legacyHeaders: false,
   message: 'Too many requests, please try again later.',
