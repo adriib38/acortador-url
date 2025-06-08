@@ -9,7 +9,7 @@ const PublicRoute = ({ children }) => {
     return <Navigate to="/" replace />;
   }
  
-  return <Navigate to="/login" replace />;
+  return children;
 };
 
 export default PublicRoute;

@@ -46,7 +46,7 @@ export default function UserLinks() {
 
   return (
     <div>
-      <h1>Perfil de Usuario</h1>
+      <h2>Perfil de Usuario</h2>
       {loading ? (
         <p>Cargando...</p>
       ) : (

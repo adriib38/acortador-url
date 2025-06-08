@@ -14,7 +14,6 @@ export default function Home() {
         <div>
             <h2>Bienvenido, {username}</h2>
             <p>Tu token de acceso es: {accessToken}</p>
-            <NavLink to="/new-link">Ir a acortador</NavLink>
 
             <UserLinks />
         </div>      

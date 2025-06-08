@@ -6,7 +6,7 @@ const PrivateRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     console.log("Usuario no autenticado, redirigiendo a login");
-    <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace />;
   }
  
   return children;
